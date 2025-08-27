@@ -1,6 +1,6 @@
 import random
 
-class Node:
+class PlaylistNode:
     def __init__(self, song):
         self.song = song
         self.next = None
@@ -10,33 +10,34 @@ class Playlist:
         self.head = None
 
     def add_song(self, song):
-        node = Node(song)
+        node = PlaylistNode(song)
         if not self.head:
             self.head = node
         else:
-            curr = self.head
-            while curr.next:
-                curr = curr.next
-            curr.next = node
+            current = self.head
+            while current.next:
+                current = current.next
+            current.next = node
 
     def traverse(self):
-        curr = self.head
-        if not curr:
-            print("Playlist empty!")
-        while curr:
-            print(curr.song)
-            curr = curr.next
+        current = self.head
+        idx = 1
+        while current:
+            print(f"{idx}. {current.song}")
+            current = current.next
+            idx += 1
+
+    def to_list(self):
+        result = []
+        current = self.head
+        while current:
+            result.append(current.song)
+            current = current.next
+        return result
 
     def shuffle_recursive(self):
-        def to_list(node):
-            if not node: return []
-            return [node.song] + to_list(node.next)
-        def from_list(lst):
-            pl = Playlist()
-            for s in lst:
-                pl.add_song(s)
-            return pl
-        songs = to_list(self.head)
-        random.shuffle(songs)
-        new_pl = from_list(songs)
-        self.head = new_pl.head
+        lst = self.to_list()
+        random.shuffle(lst)
+        self.head = None
+        for song in lst:
+            self.add_song(song)

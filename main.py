@@ -1,22 +1,28 @@
+import os
+import pygame
+import time
 from song import Song
 from playlist import Playlist
 from queues import PlayQueue, PartyQueue
 from stack import History
-import pygame
-import os
 
-# --- Initialize Pygame Mixer ---
+# --- Initialize pygame mixer ---
 pygame.mixer.init()
 
-# --- Load Songs from Folder ---
+# --- Load Songs from Music Folder ---
 music_folder = "/home/pranish/Music"
 songs = []
+
 for file in os.listdir(music_folder):
     if file.endswith(".mp3"):
-        title = os.path.splitext(file)[0]
-        artist = "Unknown"
+        name_part = os.path.splitext(file)[0]  # remove .mp3
+        if " - " in name_part:
+            title, artist = name_part.split(" - ", 1)
+        else:
+            title = name_part
+            artist = "Unknown"
         path = os.path.join(music_folder, file)
-        songs.append(Song(title, artist, path))
+        songs.append(Song(title.strip(), artist.strip(), path))
 
 # --- Initialize Structures ---
 playlist = Playlist()
@@ -27,47 +33,71 @@ history = History()
 for song in songs:
     playlist.add_song(song)
 
-# --- Track playback state ---
-is_paused = False
 current_song = None
+paused = False
 
-# --- Menu ---
+# --- Functions ---
+def play_song(song):
+    global current_song, paused
+    if not song:
+        print("No song to play!")
+        return
+    if current_song != song:
+        pygame.mixer.music.load(song.path)
+        pygame.mixer.music.play()
+        current_song = song
+        paused = False
+    print(f"Playing: {song}")
+
+def toggle_pause():
+    global paused
+    if paused:
+        pygame.mixer.music.unpause()
+        paused = False
+        print("Resumed")
+    else:
+        pygame.mixer.music.pause()
+        paused = True
+        print("Paused")
+
+def play_by_number():
+    playlist.traverse()
+    try:
+        choice = int(input("Enter song number to play: "))
+        current = playlist.head
+        idx = 1
+        while current and idx < choice:
+            current = current.next
+            idx += 1
+        if current:
+            play_song(current.song)
+            history.push(current.song)
+        else:
+            print("Invalid number!")
+    except ValueError:
+        print("Please enter a valid number!")
+
 def menu():
-    global is_paused, current_song
     while True:
-        print("\nMenu: 1.Show Songs 2.Play Next 3.Play/Pause 4.History 5.Shuffle 6.Exit")
+        print("\nMenu: 1.Show Songs 2.Play Next 3.Play by Number 4.History 5.Shuffle 6.Play/Pause 7.Exit")
         choice = input("Choice: ")
+
         if choice == "1":
             playlist.traverse()
         elif choice == "2":
-            next_song = play_queue.dequeue() or party_queue.play_next() or (playlist.head.song if playlist.head else None)
-            if next_song:
-                current_song = next_song
-                print("Playing:", next_song)
-                pygame.mixer.music.load(next_song.file_path)
-                pygame.mixer.music.play()
-                is_paused = False
-                history.push(next_song)
-            else:
-                print("No songs to play!")
+            next_song = play_queue.dequeue() or party_queue.play_next() or playlist.head.song
+            play_song(next_song)
+            history.push(next_song)
         elif choice == "3":
-            if current_song:
-                if is_paused:
-                    pygame.mixer.music.unpause()
-                    is_paused = False
-                    print("Resumed:", current_song)
-                else:
-                    pygame.mixer.music.pause()
-                    is_paused = True
-                    print("Paused:", current_song)
-            else:
-                print("No song is currently playing!")
+            play_by_number()
         elif choice == "4":
             history.show_history()
         elif choice == "5":
             playlist.shuffle_recursive()
             print("Playlist shuffled!")
         elif choice == "6":
+            toggle_pause()
+        elif choice == "7":
             pygame.mixer.music.stop()
             break
         else:

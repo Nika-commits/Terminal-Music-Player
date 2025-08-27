@@ -6,7 +6,6 @@ class History:
         self.stack.append(song)
 
     def show_history(self):
-        if not self.stack:
-            print("No history yet!")
-        for s in reversed(self.stack):
-            print(s)
+        print("\nListening History:")
+        for idx, song in enumerate(reversed(self.stack), 1):
+            print(f"{idx}. {song}")
