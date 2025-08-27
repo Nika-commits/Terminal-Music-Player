@@ -16,7 +16,6 @@ class PartyQueue:
 
     def play_next(self):
         if self.queue:
-            # Higher priority songs come first
             self.queue.sort(key=lambda s: getattr(s, "votes", 0), reverse=True)
             return self.queue.pop(0)
         return None

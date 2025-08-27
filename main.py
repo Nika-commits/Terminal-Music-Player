@@ -92,8 +92,8 @@ def play_by_number():
 
 def menu():
     while True:
-        print("\nMenu: 1.Show Songs 2.Play Next 3.Play Previous 4.Play by Number 5.History 6.Shuffle 7.Play/Pause 8.Exit")
-        choice = input("Choice: ")
+        print("\nMenu: \n\n1.Show Songs \n2.Play Next \n3.Play Previous \n4.Play by Number \n5.History \n6.Shuffle \n7.Play/Pause \n8.Exit")
+        choice = input("\n Enter your Choice: ")
 
         if choice == "1":
             playlist.traverse()
