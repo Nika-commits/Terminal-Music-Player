@@ -15,7 +15,7 @@ songs = []
 
 for file in os.listdir(music_folder):
     if file.endswith(".mp3"):
-        name_part = os.path.splitext(file)[0]  # remove .mp3
+        name_part = os.path.splitext(file)[0]
         if " - " in name_part:
             title, artist = name_part.split(" - ", 1)
         else:
@@ -33,21 +33,21 @@ history = History()
 for song in songs:
     playlist.add_song(song)
 
-current_song = None
+current_node = playlist.head
 paused = False
 
 # --- Functions ---
-def play_song(song):
-    global current_song, paused
-    if not song:
+def play_song(node):
+    global current_node, paused
+    if not node:
         print("No song to play!")
         return
-    if current_song != song:
-        pygame.mixer.music.load(song.path)
-        pygame.mixer.music.play()
-        current_song = song
-        paused = False
-    print(f"Playing: {song}")
+    pygame.mixer.music.load(node.song.path)
+    pygame.mixer.music.play()
+    current_node = node
+    paused = False
+    print(f"Playing: {node.song}")
+    history.push(node.song)
 
 def toggle_pause():
     global paused
@@ -60,6 +60,20 @@ def toggle_pause():
         paused = True
         print("Paused")
 
+def play_next():
+    global current_node
+    if current_node.next:
+        play_song(current_node.next)
+    else:
+        print("End of playlist reached!")
+
+def play_previous():
+    global current_node
+    if current_node.prev:
+        play_song(current_node.prev)
+    else:
+        print("Start of playlist reached!")
+
 def play_by_number():
     playlist.traverse()
     try:
@@ -70,8 +84,7 @@ def play_by_number():
             current = current.next
             idx += 1
         if current:
-            play_song(current.song)
-            history.push(current.song)
+            play_song(current)
         else:
             print("Invalid number!")
     except ValueError:
@@ -79,25 +92,25 @@ def play_by_number():
 
 def menu():
     while True:
-        print("\nMenu: 1.Show Songs 2.Play Next 3.Play by Number 4.History 5.Shuffle 6.Play/Pause 7.Exit")
+        print("\nMenu: 1.Show Songs 2.Play Next 3.Play Previous 4.Play by Number 5.History 6.Shuffle 7.Play/Pause 8.Exit")
         choice = input("Choice: ")
 
         if choice == "1":
             playlist.traverse()
         elif choice == "2":
-            next_song = play_queue.dequeue() or party_queue.play_next() or playlist.head.song
-            play_song(next_song)
-            history.push(next_song)
+            play_next()
         elif choice == "3":
-            play_by_number()
+            play_previous()
         elif choice == "4":
-            history.show_history()
+            play_by_number()
         elif choice == "5":
+            history.show_history()
+        elif choice == "6":
             playlist.shuffle_recursive()
             print("Playlist shuffled!")
-        elif choice == "6":
-            toggle_pause()
         elif choice == "7":
+            toggle_pause()
+        elif choice == "8":
             pygame.mixer.music.stop()
             break
         else:
